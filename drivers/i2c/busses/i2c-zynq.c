@@ -85,7 +85,7 @@
 #define XI2CPS_IXR_ALL_INTR_MASK 0x000002FF /* All ISR Mask */
 
 #define XI2CPS_FIFO_DEPTH	16		/* FIFO Depth */
-#define XI2CPS_TIMEOUT		(50 * HZ)	/* Timeout for bus busy check */
+#define XI2CPS_TIMEOUT		(5 * HZ)	/* Timeout for bus busy check */
 #define XI2CPS_ENABLED_INTR	0x2EF		/* Enabled Interrupts */
 
 #define XI2CPS_DATA_INTR_DEPTH (XI2CPS_FIFO_DEPTH - 2)/* FIFO depth at which
