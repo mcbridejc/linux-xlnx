@@ -531,14 +531,18 @@ static void fat_set_state(struct super_block *sb,
 
 	b = (struct fat_boot_sector *) bh->b_data;
 
+	// JCM Micasense modification: Don't set the dirty bit on mount. Clear it.
+	// Unmounting the card is before power off is not always possible. Setting
+	// the dirty mount means complaints for users from their OSes when card is
+	// later plugged into a PC.
 	if (sbi->fat_bits == 32) {
 		if (set)
-			b->fat32.state |= FAT_STATE_DIRTY;
+			b->fat32.state &= ~FAT_STATE_DIRTY;
 		else
 			b->fat32.state &= ~FAT_STATE_DIRTY;
 	} else /* fat 16 and 12 */ {
 		if (set)
-			b->fat16.state |= FAT_STATE_DIRTY;
+			b->fat16.state &= ~FAT_STATE_DIRTY;
 		else
 			b->fat16.state &= ~FAT_STATE_DIRTY;
 	}
