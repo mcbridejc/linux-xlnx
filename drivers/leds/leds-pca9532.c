@@ -148,14 +148,37 @@ static void pca9532_setled(struct pca9532_led *led)
 	struct pca9532_data *data = i2c_get_clientdata(client);
 	u8 maxleds = data->chip_info->num_leds;
 	char reg;
+	s32 readValue;
+	int err;
 
 	mutex_lock(&data->update_lock);
-	reg = i2c_smbus_read_byte_data(client, LED_REG(maxleds, led->id));
+
+	for(err = 0; err < 3; err++) {
+	   readValue = i2c_smbus_read_byte_data(client, LED_REG(maxleds, led->id));
+	   if(readValue >= 0) {
+	      reg = readValue;
+	      break; // successful read
+	   } else {
+	      dev_warn(&client->dev, "I/O error %d reading LED REG", err);
+	   }
+	}
+	if(err == 3) {
+	   mutex_unlock(&data->update_lock);
+	   return; /* Failed 3 times, give up */
+	}
 	/* zero led bits */
 	reg = reg & ~(0x3<<LED_NUM(led->id)*2);
 	/* set the new value */
 	reg = reg | (led->state << LED_NUM(led->id)*2);
-	i2c_smbus_write_byte_data(client, LED_REG(maxleds, led->id), reg);
+	for(err = 0; err < 3; err++) {
+	   readValue = i2c_smbus_write_byte_data(client, LED_REG(maxleds, led->id), reg);
+	   if(readValue >= 0) {
+	      break;
+	   } else {
+	      dev_warn(&client->dev, "I/O error %d writing LED REG", err);
+	   }
+	}
+
 	mutex_unlock(&data->update_lock);
 }
 
