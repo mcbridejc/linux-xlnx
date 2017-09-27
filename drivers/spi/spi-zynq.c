@@ -292,8 +292,21 @@ static int xspips_setup(struct spi_device *spi)
  */
 static void xspips_fill_tx_fifo(struct xspips *xspi)
 {
+   int initial_remaining_bytes = xspi->remaining_bytes;
+   int tx_threshold = 64;
+   if(initial_remaining_bytes < tx_threshold){
+      tx_threshold = 1;
+   }
+   xspips_write(xspi->regs + XSPIPS_THLD_OFFSET,
+					 tx_threshold);
+   
 	while ((xspips_read(xspi->regs + XSPIPS_ISR_OFFSET) & 0x00000008) == 0
 		&& (xspi->remaining_bytes > 0)) {
+		if(xspi->remaining_bytes < tx_threshold){
+         tx_threshold = 1;
+         xspips_write(xspi->regs + XSPIPS_THLD_OFFSET,
+					       tx_threshold);
+      }
 		if (xspi->txbuf)
 			xspips_write(xspi->regs + XSPIPS_TXD_OFFSET,
 					*xspi->txbuf++);
