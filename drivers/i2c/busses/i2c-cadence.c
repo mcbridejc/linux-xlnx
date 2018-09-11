@@ -442,10 +442,13 @@ static irqreturn_t cdns_i2c_master_isr(void *ptr)
 			    !id->bus_hold_flag)
 				cdns_i2c_clear_bus_hold(id);
 
-			*(id->p_recv_buf)++ =
-				cdns_i2c_readreg(CDNS_I2C_DATA_OFFSET);
-			id->recv_count--;
-			id->curr_recv_count--;
+			if((0 < id->recv_count) &&
+				(0 < id->curr_recv_count)) {
+				*(id->p_recv_buf)++ =
+					cdns_i2c_readreg(CDNS_I2C_DATA_OFFSET);
+				id->recv_count--;
+				id->curr_recv_count--;
+			}
 
 			if (cdns_is_holdquirk(id, hold_quirk))
 				break;
@@ -828,6 +831,12 @@ static int cdns_i2c_process_msg(struct cdns_i2c *id, struct i2c_msg *msg,
 		cdns_i2c_master_reset(adap);
 		dev_err(id->adap.dev.parent,
 				"timeout waiting on completion\n");
+		dev_err(id->adap.dev.parent,
+				"Slave address: %04x, flags: %04x, length: %04x\n", (unsigned int)(msg->addr), (unsigned int)(msg->flags), (unsigned int)(msg->len));
+		for(time_left = 0; time_left < msg->len; ++time_left){
+			dev_err(id->adap.dev.parent,
+					"%04x: %02x\n", (unsigned int)time_left, (unsigned int)((msg->buf)[time_left]));
+		}
 		return -ETIMEDOUT;
 	}
 
