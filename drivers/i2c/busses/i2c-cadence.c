@@ -21,6 +21,7 @@
 #include <linux/of_gpio.h>
 #include <linux/pm_runtime.h>
 #include <linux/pinctrl/consumer.h>
+#include <linux/spinlock.h>
 
 /* Register offsets for the I2C device. */
 #define CDNS_I2C_CR_OFFSET		0x00 /* Control Register, RW */
@@ -611,7 +612,8 @@ static void cdns_i2c_mrecv(struct cdns_i2c *id)
 {
 	unsigned int ctrl_reg;
 	unsigned int isr_status;
-
+	DEFINE_SPINLOCK(mr_lock);
+	unsigned long flags;
 	id->p_recv_buf = id->p_msg->buf;
 	id->recv_count = id->p_msg->len;
 
@@ -652,6 +654,7 @@ static void cdns_i2c_mrecv(struct cdns_i2c *id)
 	}
 
 	/* Set the slave address in address register - triggers operation */
+	spin_lock_irqsave(&mr_lock, flags);
 	cdns_i2c_writereg(CDNS_I2C_ENABLED_INTR_MASK, CDNS_I2C_IER_OFFSET);
 	cdns_i2c_writereg(id->p_msg->addr & CDNS_I2C_ADDR_MASK,
 						CDNS_I2C_ADDR_OFFSET);
@@ -660,6 +663,7 @@ static void cdns_i2c_mrecv(struct cdns_i2c *id)
 		((id->p_msg->flags & I2C_M_RECV_LEN) != I2C_M_RECV_LEN) &&
 		(id->recv_count <= CDNS_I2C_FIFO_DEPTH))
 			cdns_i2c_clear_bus_hold(id);
+	spin_unlock_irqrestore(&mr_lock, flags);
 }
 
 /**
