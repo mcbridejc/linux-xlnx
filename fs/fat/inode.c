@@ -682,13 +682,13 @@ static void fat_set_state(struct super_block *sb,
 	if (sbi->fat_bits == 32) {
 		if (set)
 			b->fat32.state |= FAT_STATE_DIRTY;
-		else
-			b->fat32.state &= ~FAT_STATE_DIRTY;
+		//else
+		//	b->fat32.state &= ~FAT_STATE_DIRTY;
 	} else /* fat 16 and 12 */ {
 		if (set)
 			b->fat16.state |= FAT_STATE_DIRTY;
-		else
-			b->fat16.state &= ~FAT_STATE_DIRTY;
+		//else
+		//	b->fat16.state &= ~FAT_STATE_DIRTY;
 	}
 
 	mark_buffer_dirty(bh);
